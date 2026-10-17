@@ -1,0 +1,34 @@
+<div class="border rounded overflow-auto">
+  <table mat-table [dataSource]="calculations" class="w-100">
+    <ng-container matColumnDef="calculatedAt">
+      <th mat-header-cell *matHeaderCellDef>Date</th>
+      <td mat-cell *matCellDef="let row">{{ row.calculatedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="totalIncome">
+      <th mat-header-cell *matHeaderCellDef class="text-end">Income</th>
+      <td mat-cell *matCellDef="let row" class="text-end">{{ row.totalIncome | number: '1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="totalCosts">
+      <th mat-header-cell *matHeaderCellDef class="text-end">Total Costs</th>
+      <td mat-cell *matCellDef="let row" class="text-end">{{ row.totalCosts | number: '1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="profitOrLoss">
+      <th mat-header-cell *matHeaderCellDef class="text-end">Profit or Loss</th>
+      <td mat-cell *matCellDef="let row" class="text-end fw-semibold"
+          [class.text-success]="row.profitOrLoss > 0"
+          [class.text-danger]="row.profitOrLoss < 0">
+        {{ row.profitOrLoss | number: '1.2-2' }}
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell p-3 text-muted" [attr.colspan]="columns.length">No calculations yet</td>
+    </tr>
+  </table>
+</div>

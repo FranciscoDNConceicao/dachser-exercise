@@ -1,0 +1,30 @@
+<h2 class="h4 mb-4">Calculate Profit</h2>
+
+<div class="row g-3 align-items-center mb-2">
+  <div class="col-md-5">
+    <mat-form-field class="w-100">
+      <mat-label>Shipment</mat-label>
+      <mat-select [value]="selectedShipment" (selectionChange)="selectShipment($event.value)">
+        @for (shipment of shipments; track shipment.id) {
+          <mat-option [value]="shipment">{{ shipment.shipmentCode }} - {{ shipment.description }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (selectedShipment) {
+    <div class="col-md-7 text-muted">
+      Customer: <strong>{{ selectedShipment.customerName }}</strong>
+    </div>
+  }
+</div>
+
+<app-calculation-form [disabled]="!selectedShipment || loading" (calculate)="calculate($event)" />
+
+<div class="progress-slot my-3">
+  @if (loading) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+</div>
+
+<app-calculation-history [calculations]="history" />

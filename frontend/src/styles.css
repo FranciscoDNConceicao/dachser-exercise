@@ -1,0 +1,16 @@
+/* Global styles. Bootstrap and the Angular Material theme are loaded in angular.json. */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Keeps the page from jumping when the loading bar appears */
+.progress-slot {
+  height: 4px;
+}

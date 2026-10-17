@@ -1,0 +1,22 @@
+<div class="d-flex flex-column min-vh-100">
+  <header class="d-flex border-bottom">
+    <div class="brand px-4 py-3">
+      <div class="brand-name">DACHSER</div>
+      <div class="brand-tagline">Intelligent Logistics</div>
+    </div>
+  </header>
+
+  <div class="d-flex flex-grow-1">
+    <nav class="sidebar border-end p-3">
+      <a routerLink="/calculate-profit" routerLinkActive="active"
+         class="nav-item d-flex align-items-center gap-2 px-2 py-2 rounded text-decoration-none">
+        <mat-icon>calculate</mat-icon>
+        Calculate Profit
+      </a>
+    </nav>
+
+    <main class="flex-grow-1 p-4">
+      <router-outlet />
+    </main>
+  </div>
+</div>

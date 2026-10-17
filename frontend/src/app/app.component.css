@@ -1,0 +1,31 @@
+.brand {
+  width: 220px;
+  background-color: #ffcc00;
+  color: #00418d;
+}
+
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.brand-tagline {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sidebar {
+  width: 220px;
+}
+
+.nav-item {
+  color: inherit;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background-color: rgba(0, 65, 141, 0.08);
+  color: #00418d;
+  font-weight: 500;
+}
