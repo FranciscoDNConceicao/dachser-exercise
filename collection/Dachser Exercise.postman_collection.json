@@ -1,0 +1,102 @@
+{
+  "info": {
+    "_postman_id": "878c54bc-8691-4211-ae39-bb46f07def5e",
+    "name": "Dachser Exercise",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "59027026",
+    "_collection_link": "https://go.postman.co/collection/59027026-878c54bc-8691-4211-ae39-bb46f07def5e?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Get All Shipments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8000/api/shipments",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "shipments"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Shipment by Code",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8000/api/shipments/code/SHP-0001",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "shipments",
+            "code",
+            "SHP-0001"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Save Shipment Calculations",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"income\":1000,\r\n    \"cost\": 400,\r\n    \"additionalCost\": 500\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8000/api/shipments/1/profit-calculations",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "shipments",
+            "1",
+            "profit-calculations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get history",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8000/api/shipments/1/profit-calculations",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "shipments",
+            "1",
+            "profit-calculations"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
