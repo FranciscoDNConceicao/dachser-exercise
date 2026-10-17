@@ -60,11 +60,12 @@
             <resource>
                 <directory>src/main/resources</directory>
             </resource>
-            <!-- Single source of the SQL script, copied to the classpath (classpath:schema.sql) -->
+            <!-- Single source of the SQL scripts, copied to the classpath (classpath:schema.sql, classpath:data.sql) -->
             <resource>
                 <directory>../database</directory>
                 <includes>
                     <include>schema.sql</include>
+                    <include>data.sql</include>
                 </includes>
             </resource>
         </resources>
