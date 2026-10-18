@@ -1,22 +1,22 @@
 <div class="border rounded overflow-auto">
-  <table mat-table [dataSource]="calculations" class="w-100">
+  <table mat-table [dataSource]="dataSource" matSort class="w-100">
     <ng-container matColumnDef="calculatedAt">
-      <th mat-header-cell *matHeaderCellDef>Date</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
       <td mat-cell *matCellDef="let row">{{ row.calculatedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
     </ng-container>
 
     <ng-container matColumnDef="totalIncome">
-      <th mat-header-cell *matHeaderCellDef class="text-end">Income</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="text-end">Income</th>
       <td mat-cell *matCellDef="let row" class="text-end">{{ row.totalIncome | number: '1.2-2' }}</td>
     </ng-container>
 
     <ng-container matColumnDef="totalCosts">
-      <th mat-header-cell *matHeaderCellDef class="text-end">Total Costs</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="text-end">Total Costs</th>
       <td mat-cell *matCellDef="let row" class="text-end">{{ row.totalCosts | number: '1.2-2' }}</td>
     </ng-container>
 
     <ng-container matColumnDef="profitOrLoss">
-      <th mat-header-cell *matHeaderCellDef class="text-end">Profit or Loss</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="text-end">Profit or Loss</th>
       <td mat-cell *matCellDef="let row" class="text-end fw-semibold"
           [class.text-success]="row.profitOrLoss > 0"
           [class.text-danger]="row.profitOrLoss < 0">

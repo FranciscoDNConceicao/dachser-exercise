@@ -14,3 +14,10 @@ body {
 .progress-slot {
   height: 4px;
 }
+
+/* Right-aligns the sortable headers of numeric columns
+   (arrowPosition="before" uses row-reverse, so flex-start is the right side) */
+.mat-sort-header.text-end .mat-sort-header-container {
+  width: 100%;
+  justify-content: flex-start;
+}
