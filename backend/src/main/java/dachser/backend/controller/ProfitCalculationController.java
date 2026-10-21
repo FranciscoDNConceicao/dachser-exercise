@@ -8,7 +8,6 @@ import dachser.backend.service.ShipmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,15 +66,5 @@ public class ProfitCalculationController {
     @GetMapping("/{shipmentId}/profit-calculations")
     public List<ProfitCalculationResponse> findHistory(@PathVariable Long shipmentId) {
         return profitCalculationService.findHistory(shipmentId);
-    }
-
-    /**
-     * Deletes a calculation of the shipment (one row of the history),
-     * together with the income and costs entered in it.
-     */
-    @DeleteMapping("/{shipmentId}/profit-calculations/{calculationId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCalculation(@PathVariable Long shipmentId, @PathVariable Long calculationId) {
-        profitCalculationService.delete(shipmentId, calculationId);
     }
 }

@@ -27,12 +27,4 @@ public interface ProfitCalculationService {
      * @throws dachser.backend.exception.ShipmentNotFoundException if the shipment does not exist
      */
     List<ProfitCalculationResponse> findHistory(Long shipmentId);
-
-    /**
-     * Deletes a calculation of a shipment together with the income and costs entered in it.
-     *
-     * @throws dachser.backend.exception.ProfitCalculationNotFoundException if the calculation
-     *         does not exist or belongs to another shipment
-     */
-    void delete(Long shipmentId, Long calculationId);
 }

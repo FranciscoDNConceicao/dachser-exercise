@@ -84,14 +84,6 @@ class RepositoryIntegrationTest {
     }
 
     @Test
-    void findByIdAndShipmentId_ignoresCalculationsOfOtherShipments() {
-        Long calculationId = latestCalculation("SHP-0002").getId();
-
-        assertThat(profitCalculationRepository.findByIdAndShipmentId(calculationId, shipmentId("SHP-0002"))).isPresent();
-        assertThat(profitCalculationRepository.findByIdAndShipmentId(calculationId, shipmentId("SHP-0001"))).isEmpty();
-    }
-
-    @Test
     void save_rejectsInconsistentProfit() {
         ProfitCalculation calculation = new ProfitCalculation();
         calculation.setShipment(shipmentRepository.findByShipmentCode("SHP-0001").orElseThrow());

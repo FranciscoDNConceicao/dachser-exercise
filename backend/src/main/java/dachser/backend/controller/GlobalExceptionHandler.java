@@ -1,6 +1,6 @@
 package dachser.backend.controller;
 
-import dachser.backend.exception.ResourceNotFoundException;
+import dachser.backend.exception.ShipmentNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,10 +27,10 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
-     * The requested data (shipment, calculation) does not exist: 404.
+     * The requested shipment does not exist: 404.
      */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
+    @ExceptionHandler(ShipmentNotFoundException.class)
+    public ProblemDetail handleNotFound(ShipmentNotFoundException ex) {
         log.warn(ex.getMessage());
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }

@@ -3,7 +3,7 @@ package dachser.backend.exception;
 /**
  * Thrown when the requested shipment does not exist.
  */
-public class ShipmentNotFoundException extends ResourceNotFoundException {
+public class ShipmentNotFoundException extends RuntimeException {
 
     public ShipmentNotFoundException(Long shipmentId) {
         super("Shipment not found: " + shipmentId);

@@ -5,7 +5,6 @@ import dachser.backend.dto.ProfitCalculationResponse;
 import dachser.backend.entity.Cost;
 import dachser.backend.entity.ProfitCalculation;
 import dachser.backend.entity.Shipment;
-import dachser.backend.exception.ProfitCalculationNotFoundException;
 import dachser.backend.exception.ShipmentNotFoundException;
 import dachser.backend.mapper.ProfitCalculationMapper;
 import dachser.backend.repository.ProfitCalculationRepository;
@@ -24,7 +23,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -155,26 +153,6 @@ class ProfitCalculationServiceImplTest {
         when(shipmentRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.findHistory(99L)).isInstanceOf(ShipmentNotFoundException.class);
-    }
-
-    @Test
-    void delete_removesTheCalculation() {
-        ProfitCalculation calculation = new ProfitCalculation();
-        when(profitCalculationRepository.findByIdAndShipmentId(7L, SHIPMENT_ID)).thenReturn(Optional.of(calculation));
-
-        service.delete(SHIPMENT_ID, 7L);
-
-        verify(profitCalculationRepository).delete(calculation);
-    }
-
-    @Test
-    void delete_throwsWhenCalculationDoesNotBelongToTheShipment() {
-        when(profitCalculationRepository.findByIdAndShipmentId(7L, 2L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> service.delete(2L, 7L))
-                .isInstanceOf(ProfitCalculationNotFoundException.class)
-                .hasMessageContaining("7");
-        verify(profitCalculationRepository, never()).delete(any());
     }
 
     /**

@@ -6,7 +6,6 @@ import dachser.backend.entity.Cost;
 import dachser.backend.entity.Income;
 import dachser.backend.entity.ProfitCalculation;
 import dachser.backend.entity.Shipment;
-import dachser.backend.exception.ProfitCalculationNotFoundException;
 import dachser.backend.exception.ShipmentNotFoundException;
 import dachser.backend.mapper.ProfitCalculationMapper;
 import dachser.backend.repository.ProfitCalculationRepository;
@@ -74,17 +73,6 @@ public class ProfitCalculationServiceImpl implements ProfitCalculationService {
         return profitCalculationRepository.findByShipmentIdOrderByCalculatedAtDesc(shipmentId).stream()
                 .map(profitCalculationMapper::toResponse)
                 .toList();
-    }
-
-    @Override
-    @Transactional
-    public void delete(Long shipmentId, Long calculationId) {
-        ProfitCalculation calculation = profitCalculationRepository.findByIdAndShipmentId(calculationId, shipmentId)
-                .orElseThrow(() -> new ProfitCalculationNotFoundException(calculationId));
-
-        // The income and costs of the calculation are deleted with it (cascade)
-        profitCalculationRepository.delete(calculation);
-        log.info("Profit calculation {} of shipment {} deleted", calculationId, shipmentId);
     }
 
     private Shipment getShipment(Long shipmentId) {

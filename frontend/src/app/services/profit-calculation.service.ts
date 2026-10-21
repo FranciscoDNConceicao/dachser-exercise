@@ -28,9 +28,4 @@ export class ProfitCalculationService {
   calculate(shipmentId: number, request: CalculationRequest): Observable<Calculation> {
     return this.http.post<Calculation>(`${this.baseUrl}/${shipmentId}/profit-calculations`, request);
   }
-
-  /** Deletes a calculation of a shipment, together with its income and costs. */
-  deleteCalculation(shipmentId: number, calculationId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${shipmentId}/profit-calculations/${calculationId}`);
-  }
 }

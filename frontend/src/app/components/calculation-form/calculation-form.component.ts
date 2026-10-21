@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, EventEmitter, Input, Output, ViewChild, inject } from '@angular/core';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -27,6 +27,9 @@ export class CalculationFormComponent {
 
   private readonly fb = inject(FormBuilder);
 
+  /** Form directive; besides the values it tracks whether the form was submitted. */
+  @ViewChild(FormGroupDirective) private formDirective?: FormGroupDirective;
+
   readonly form = this.fb.group({
     income: [null as number | null, [Validators.required, Validators.min(0)]],
     cost: [null as number | null, [Validators.required, Validators.min(0)]],
@@ -46,6 +49,8 @@ export class CalculationFormComponent {
 
   /** Clears the form after a successful calculation (called by the parent page). */
   reset(): void {
-    this.form.reset({ income: null, cost: null, additionalCost: 0 });
+    // resetForm also clears the "submitted" state: with form.reset() alone, Angular Material
+    // would show the "required" errors on the now empty fields of a submitted form
+    this.formDirective?.resetForm({ income: null, cost: null, additionalCost: 0 });
   }
 }

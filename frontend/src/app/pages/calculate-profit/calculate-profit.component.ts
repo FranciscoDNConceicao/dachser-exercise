@@ -1,6 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
@@ -8,7 +7,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { CalculationFormComponent } from '../../components/calculation-form/calculation-form.component';
 import { CalculationHistoryComponent } from '../../components/calculation-history/calculation-history.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../components/confirm-dialog/confirm-dialog.component';
 import { Calculation, CalculationRequest } from '../../models/calculation.model';
 import { Shipment } from '../../models/shipment.model';
 import { ProfitCalculationService } from '../../services/profit-calculation.service';
@@ -34,7 +32,6 @@ import { ProfitCalculationService } from '../../services/profit-calculation.serv
 export class CalculateProfitComponent implements OnInit {
   private readonly service = inject(ProfitCalculationService);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly dialog = inject(MatDialog);
 
   @ViewChild(CalculationFormComponent) private form?: CalculationFormComponent;
 
@@ -88,36 +85,6 @@ export class CalculateProfitComponent implements OnInit {
         this.loading = false;
         this.form?.reset();
         this.snackBar.open('Profit calculated', 'Close', { duration: 3000 });
-      },
-      error: error => this.handleError(error)
-    });
-  }
-
-  /** Asks for confirmation, then deletes the calculation (with its income and costs). */
-  delete(calculation: Calculation): void {
-    this.dialog
-      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
-        data: {
-          title: 'Delete calculation',
-          message: 'Delete this calculation? Its income and costs are deleted as well.',
-          confirmLabel: 'Delete'
-        }
-      })
-      .afterClosed()
-      .subscribe(confirmed => {
-        if (confirmed && this.selectedShipment) {
-          this.deleteConfirmed(this.selectedShipment, calculation);
-        }
-      });
-  }
-
-  private deleteConfirmed(shipment: Shipment, calculation: Calculation): void {
-    this.loading = true;
-    this.service.deleteCalculation(shipment.id, calculation.id).subscribe({
-      next: () => {
-        this.history = this.history.filter(item => item.id !== calculation.id);
-        this.loading = false;
-        this.snackBar.open('Calculation deleted', 'Close', { duration: 3000 });
       },
       error: error => this.handleError(error)
     });

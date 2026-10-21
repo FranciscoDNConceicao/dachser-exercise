@@ -3,7 +3,6 @@ package dachser.backend.controller;
 import dachser.backend.dto.ProfitCalculationRequest;
 import dachser.backend.dto.ProfitCalculationResponse;
 import dachser.backend.dto.ShipmentResponse;
-import dachser.backend.exception.ProfitCalculationNotFoundException;
 import dachser.backend.exception.ShipmentNotFoundException;
 import dachser.backend.service.ProfitCalculationService;
 import dachser.backend.service.ShipmentService;
@@ -20,11 +19,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -131,23 +127,6 @@ class ProfitCalculationControllerTest {
         mockMvc.perform(get(CALCULATIONS_URL))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].profitOrLoss").value(800.00));
-    }
-
-    @Test
-    void deleteCalculation_returns204() throws Exception {
-        mockMvc.perform(delete(CALCULATIONS_URL + "/5"))
-                .andExpect(status().isNoContent());
-
-        verify(profitCalculationService).delete(1L, 5L);
-    }
-
-    @Test
-    void deleteCalculation_returns404WhenNotFound() throws Exception {
-        doThrow(new ProfitCalculationNotFoundException(5L)).when(profitCalculationService).delete(1L, 5L);
-
-        mockMvc.perform(delete(CALCULATIONS_URL + "/5"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.detail").value("Profit calculation not found: 5"));
     }
 
     @Test
