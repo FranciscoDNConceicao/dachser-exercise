@@ -3,6 +3,7 @@ package dachser.backend.controller;
 import dachser.backend.dto.ProfitCalculationRequest;
 import dachser.backend.dto.ProfitCalculationResponse;
 import dachser.backend.dto.ShipmentResponse;
+import dachser.backend.exception.ProfitCalculationNotFoundException;
 import dachser.backend.exception.ShipmentNotFoundException;
 import dachser.backend.service.ProfitCalculationService;
 import dachser.backend.service.ShipmentService;
@@ -19,8 +20,11 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -65,23 +69,34 @@ class ProfitCalculationControllerTest {
     @Test
     void calculate_returns201WithResult() throws Exception {
         when(profitCalculationService.calculate(eq(1L), any(ProfitCalculationRequest.class)))
-                .thenReturn(new ProfitCalculationResponse(5L, 1L, "SHP-0001", new BigDecimal("1730.50"),
-                        new BigDecimal("1000.00"), new BigDecimal("730.50"), LocalDateTime.of(2026, 10, 17, 15, 0)));
+                .thenReturn(new ProfitCalculationResponse(5L, 1L, "SHP-0001", new BigDecimal("230.50"),
+                        new BigDecimal("200.00"), new BigDecimal("30.50"), LocalDateTime.of(2026, 10, 17, 15, 0)));
 
         mockMvc.perform(post(CALCULATIONS_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"income\": 230.5, \"cost\": 200, \"additionalCost\": 0}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.totalIncome").value(1730.50))
-                .andExpect(jsonPath("$.totalCosts").value(1000.00))
-                .andExpect(jsonPath("$.profitOrLoss").value(730.50));
+                .andExpect(jsonPath("$.totalIncome").value(230.50))
+                .andExpect(jsonPath("$.totalCosts").value(200.00))
+                .andExpect(jsonPath("$.profitOrLoss").value(30.50));
     }
 
     @Test
     void calculate_returns400ForNegativeAmount() throws Exception {
         mockMvc.perform(post(CALCULATIONS_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"income\": -5}"))
+                        .content("{\"income\": -5, \"cost\": 10}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.startsWith("income:")));
+
+        verifyNoInteractions(profitCalculationService);
+    }
+
+    @Test
+    void calculate_returns400WhenIncomeIsMissing() throws Exception {
+        mockMvc.perform(post(CALCULATIONS_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cost\": 10}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.startsWith("income:")));
 
@@ -103,19 +118,36 @@ class ProfitCalculationControllerTest {
 
         mockMvc.perform(post("/api/shipments/99/profit-calculations")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"income\": 10}"))
+                        .content("{\"income\": 10, \"cost\": 5}"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void findHistory_returnsCalculations() throws Exception {
         when(profitCalculationService.findHistory(1L)).thenReturn(List.of(
-                new ProfitCalculationResponse(2L, 1L, "SHP-0001", new BigDecimal("1500.00"),
-                        new BigDecimal("800.00"), new BigDecimal("700.00"), LocalDateTime.of(2026, 10, 2, 10, 30))));
+                new ProfitCalculationResponse(2L, 1L, "SHP-0001", new BigDecimal("1000.00"),
+                        new BigDecimal("200.00"), new BigDecimal("800.00"), LocalDateTime.of(2026, 10, 2, 10, 30))));
 
         mockMvc.perform(get(CALCULATIONS_URL))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].profitOrLoss").value(700.00));
+                .andExpect(jsonPath("$[0].profitOrLoss").value(800.00));
+    }
+
+    @Test
+    void deleteCalculation_returns204() throws Exception {
+        mockMvc.perform(delete(CALCULATIONS_URL + "/5"))
+                .andExpect(status().isNoContent());
+
+        verify(profitCalculationService).delete(1L, 5L);
+    }
+
+    @Test
+    void deleteCalculation_returns404WhenNotFound() throws Exception {
+        doThrow(new ProfitCalculationNotFoundException(5L)).when(profitCalculationService).delete(1L, 5L);
+
+        mockMvc.perform(delete(CALCULATIONS_URL + "/5"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Profit calculation not found: 5"));
     }
 
     @Test

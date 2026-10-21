@@ -16,8 +16,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * Income received for a shipment (e.g. customer payment).
- * The total income of a shipment is the sum of all its incomes.
+ * Income entered in a profit calculation (the customer payment).
+ * It belongs to its calculation and is deleted together with it.
  * Mapped to the {@code incomes} table.
  */
 @Entity
@@ -32,10 +32,10 @@ public class Income {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Shipment this income belongs to. */
+    /** Calculation in which this income was entered. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "shipment_id", nullable = false)
-    private Shipment shipment;
+    @JoinColumn(name = "calculation_id", nullable = false)
+    private ProfitCalculation calculation;
 
     /** Description of the income (e.g. {@code Customer payment}). */
     @Column(name = "description", nullable = false)

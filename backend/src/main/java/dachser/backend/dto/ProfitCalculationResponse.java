@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
  * @param id           technical identifier of the calculation
  * @param shipmentId   identifier of the shipment
  * @param shipmentCode business code of the shipment
- * @param totalIncome  sum of all incomes at calculation time
- * @param totalCosts   sum of all costs at calculation time
+ * @param totalIncome  income entered in the calculation
+ * @param totalCosts   costs entered in the calculation (cost plus additional cost)
  * @param profitOrLoss total income minus total costs (negative means loss)
  * @param calculatedAt date and time of the calculation
  */

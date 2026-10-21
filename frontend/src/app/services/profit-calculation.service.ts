@@ -24,8 +24,13 @@ export class ProfitCalculationService {
     return this.http.get<Calculation[]>(`${this.baseUrl}/${shipmentId}/profit-calculations`);
   }
 
-  /** Records the entered income and costs and calculates the profit or loss of a shipment. */
+  /** Stores the entered income and costs as a new calculation and returns its profit or loss. */
   calculate(shipmentId: number, request: CalculationRequest): Observable<Calculation> {
     return this.http.post<Calculation>(`${this.baseUrl}/${shipmentId}/profit-calculations`, request);
+  }
+
+  /** Deletes a calculation of a shipment, together with its income and costs. */
+  deleteCalculation(shipmentId: number, calculationId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${shipmentId}/profit-calculations/${calculationId}`);
   }
 }

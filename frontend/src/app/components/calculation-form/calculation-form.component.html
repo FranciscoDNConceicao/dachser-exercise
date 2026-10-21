@@ -4,7 +4,10 @@
       <legend class="fs-6 text-muted">Income &amp; Outcome</legend>
       <mat-form-field class="w-100">
         <mat-label>Income</mat-label>
-        <input matInput type="number" min="0" step="0.01" formControlName="income">
+        <input matInput type="number" min="0" step="0.01" formControlName="income" required>
+        @if (form.controls.income.hasError('required')) {
+          <mat-error>Income is required</mat-error>
+        }
         @if (form.controls.income.hasError('min')) {
           <mat-error>Must be 0 or more</mat-error>
         }
@@ -15,7 +18,10 @@
       <legend class="fs-6 text-muted">Costs</legend>
       <mat-form-field class="w-100">
         <mat-label>Cost</mat-label>
-        <input matInput type="number" min="0" step="0.01" formControlName="cost">
+        <input matInput type="number" min="0" step="0.01" formControlName="cost" required>
+        @if (form.controls.cost.hasError('required')) {
+          <mat-error>Cost is required</mat-error>
+        }
         @if (form.controls.cost.hasError('min')) {
           <mat-error>Must be 0 or more</mat-error>
         }

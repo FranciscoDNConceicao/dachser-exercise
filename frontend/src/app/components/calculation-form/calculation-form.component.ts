@@ -28,8 +28,8 @@ export class CalculationFormComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly form = this.fb.group({
-    income: [null as number | null, Validators.min(0)],
-    cost: [null as number | null, Validators.min(0)],
+    income: [null as number | null, [Validators.required, Validators.min(0)]],
+    cost: [null as number | null, [Validators.required, Validators.min(0)]],
     additionalCost: [0 as number | null, Validators.min(0)]
   });
 
@@ -39,7 +39,9 @@ export class CalculationFormComponent {
       this.form.markAllAsTouched();
       return;
     }
-    this.calculate.emit(this.form.getRawValue());
+    const { income, cost, additionalCost } = this.form.getRawValue();
+    // Income and cost are guaranteed by the required validators
+    this.calculate.emit({ income: income!, cost: cost!, additionalCost });
   }
 
   /** Clears the form after a successful calculation (called by the parent page). */

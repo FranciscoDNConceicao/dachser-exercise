@@ -6,10 +6,9 @@ import dachser.backend.entity.Cost;
 import dachser.backend.entity.Income;
 import dachser.backend.entity.ProfitCalculation;
 import dachser.backend.entity.Shipment;
+import dachser.backend.exception.ProfitCalculationNotFoundException;
 import dachser.backend.exception.ShipmentNotFoundException;
 import dachser.backend.mapper.ProfitCalculationMapper;
-import dachser.backend.repository.CostRepository;
-import dachser.backend.repository.IncomeRepository;
 import dachser.backend.repository.ProfitCalculationRepository;
 import dachser.backend.repository.ShipmentRepository;
 import dachser.backend.service.ProfitCalculationService;
@@ -20,13 +19,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Default implementation of {@link ProfitCalculationService}.
  * <p>
- * Follows the main flow of the use case: store income, store costs,
- * calculate the totals of everything recorded for the shipment and store the result.
- * The whole flow runs in a single transaction, so a failure leaves no partial data.
+ * Follows the main flow of the use case: the income and costs entered by the user are
+ * stored with a new calculation of the shipment, and its profit or loss is calculated from them.
+ * Each calculation is independent (one row of the history table) and owns its income and costs.
+ * Every operation runs in a single transaction, so a failure leaves no partial data.
  */
 @Slf4j
 @Service
@@ -39,32 +40,30 @@ public class ProfitCalculationServiceImpl implements ProfitCalculationService {
     static final String ADDITIONAL_COST_DESCRIPTION = "Additional cost";
 
     private final ShipmentRepository shipmentRepository;
-    private final IncomeRepository incomeRepository;
-    private final CostRepository costRepository;
     private final ProfitCalculationRepository profitCalculationRepository;
     private final ProfitCalculationMapper profitCalculationMapper;
 
     @Override
     @Transactional
     public ProfitCalculationResponse calculate(Long shipmentId, ProfitCalculationRequest request) {
-        Shipment shipment = getShipment(shipmentId);
-
-        recordIncome(shipment, request.income());
-        recordCost(shipment, COST_DESCRIPTION, request.cost());
-        recordCost(shipment, ADDITIONAL_COST_DESCRIPTION, request.additionalCost());
-
-        BigDecimal totalIncome = incomeRepository.sumAmountByShipmentId(shipmentId);
-        BigDecimal totalCosts = costRepository.sumAmountByShipmentId(shipmentId);
-
         ProfitCalculation calculation = new ProfitCalculation();
-        calculation.setShipment(shipment);
+        calculation.setShipment(getShipment(shipmentId));
+        calculation.addIncome(newIncome(request.income()));
+        calculation.addCost(newCost(COST_DESCRIPTION, request.cost()));
+        if (hasValue(request.additionalCost())) {
+            calculation.addCost(newCost(ADDITIONAL_COST_DESCRIPTION, request.additionalCost()));
+        }
+
+        BigDecimal totalIncome = sum(calculation.getIncomes(), Income::getAmount);
+        BigDecimal totalCosts = sum(calculation.getCosts(), Cost::getAmount);
         calculation.setTotalIncome(totalIncome);
         calculation.setTotalCosts(totalCosts);
         calculation.setProfitOrLoss(totalIncome.subtract(totalCosts));
 
+        // The income and costs are saved together with the calculation (cascade)
         ProfitCalculation saved = profitCalculationRepository.save(calculation);
         log.info("Profit calculated for shipment {}: income={}, costs={}, result={}",
-                shipment.getShipmentCode(), totalIncome, totalCosts, saved.getProfitOrLoss());
+                saved.getShipment().getShipmentCode(), totalIncome, totalCosts, saved.getProfitOrLoss());
 
         return profitCalculationMapper.toResponse(saved);
     }
@@ -77,37 +76,38 @@ public class ProfitCalculationServiceImpl implements ProfitCalculationService {
                 .toList();
     }
 
+    @Override
+    @Transactional
+    public void delete(Long shipmentId, Long calculationId) {
+        ProfitCalculation calculation = profitCalculationRepository.findByIdAndShipmentId(calculationId, shipmentId)
+                .orElseThrow(() -> new ProfitCalculationNotFoundException(calculationId));
+
+        // The income and costs of the calculation are deleted with it (cascade)
+        profitCalculationRepository.delete(calculation);
+        log.info("Profit calculation {} of shipment {} deleted", calculationId, shipmentId);
+    }
+
     private Shipment getShipment(Long shipmentId) {
         return shipmentRepository.findById(shipmentId)
                 .orElseThrow(() -> new ShipmentNotFoundException(shipmentId));
     }
 
-    /**
-     * Stores a new income, ignoring empty or zero values.
-     */
-    private void recordIncome(Shipment shipment, BigDecimal amount) {
-        if (!hasValue(amount)) {
-            return;
-        }
+    private static Income newIncome(BigDecimal amount) {
         Income income = new Income();
-        income.setShipment(shipment);
         income.setDescription(INCOME_DESCRIPTION);
         income.setAmount(amount);
-        incomeRepository.save(income);
+        return income;
     }
 
-    /**
-     * Stores a new cost, ignoring empty or zero values.
-     */
-    private void recordCost(Shipment shipment, String description, BigDecimal amount) {
-        if (!hasValue(amount)) {
-            return;
-        }
+    private static Cost newCost(String description, BigDecimal amount) {
         Cost cost = new Cost();
-        cost.setShipment(shipment);
         cost.setDescription(description);
         cost.setAmount(amount);
-        costRepository.save(cost);
+        return cost;
+    }
+
+    private static <T> BigDecimal sum(List<T> entries, Function<T, BigDecimal> amount) {
+        return entries.stream().map(amount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private static boolean hasValue(BigDecimal amount) {

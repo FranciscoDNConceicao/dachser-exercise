@@ -97,6 +97,28 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "Delete Calculation",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "localhost:8000/api/shipments/1/profit-calculations/1",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "shipments",
+            "1",
+            "profit-calculations",
+            "1"
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }

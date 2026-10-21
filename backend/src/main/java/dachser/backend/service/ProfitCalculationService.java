@@ -11,11 +11,11 @@ import java.util.List;
 public interface ProfitCalculationService {
 
     /**
-     * Records the new income and costs of a shipment, calculates its profit or loss
-     * ({@code total income - total costs}) and stores the result.
+     * Stores the income and costs entered by the user as a new calculation of the shipment,
+     * with its profit or loss ({@code income - (cost + additional cost)}).
      *
      * @param shipmentId shipment to calculate
-     * @param request    new income and costs entered by the user
+     * @param request    income and costs entered by the user
      * @return the stored calculation
      * @throws dachser.backend.exception.ShipmentNotFoundException if the shipment does not exist
      */
@@ -27,4 +27,12 @@ public interface ProfitCalculationService {
      * @throws dachser.backend.exception.ShipmentNotFoundException if the shipment does not exist
      */
     List<ProfitCalculationResponse> findHistory(Long shipmentId);
+
+    /**
+     * Deletes a calculation of a shipment together with the income and costs entered in it.
+     *
+     * @throws dachser.backend.exception.ProfitCalculationNotFoundException if the calculation
+     *         does not exist or belongs to another shipment
+     */
+    void delete(Long shipmentId, Long calculationId);
 }

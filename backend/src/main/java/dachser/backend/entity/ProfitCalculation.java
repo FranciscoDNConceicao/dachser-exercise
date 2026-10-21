@@ -1,5 +1,6 @@
 package dachser.backend.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -8,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,13 +18,16 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Result of a profit or loss calculation for a shipment.
+ * One profit or loss calculation of a shipment (one row of the history table).
  * <p>
- * Stored as a historical snapshot (use case post-condition): the totals are kept
- * as they were at calculation time, even if incomes or costs change later.
- * The database guarantees {@code profitOrLoss = totalIncome - totalCosts}.
+ * Each calculation is independent: it owns the income and costs entered with it,
+ * which are saved and deleted together with the calculation. The totals are stored
+ * with the result (use case post-condition), and the database guarantees
+ * {@code profitOrLoss = totalIncome - totalCosts}.
  * Mapped to the {@code profit_calculations} table.
  */
 @Entity
@@ -42,11 +47,19 @@ public class ProfitCalculation {
     @JoinColumn(name = "shipment_id", nullable = false)
     private Shipment shipment;
 
-    /** Sum of the shipment incomes at calculation time. */
+    /** Incomes entered in this calculation (the customer payment). */
+    @OneToMany(mappedBy = "calculation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Income> incomes = new ArrayList<>();
+
+    /** Costs entered in this calculation (cost and additional cost). */
+    @OneToMany(mappedBy = "calculation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Cost> costs = new ArrayList<>();
+
+    /** Sum of the incomes of this calculation. */
     @Column(name = "total_income", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalIncome;
 
-    /** Sum of the shipment costs at calculation time. */
+    /** Sum of the costs of this calculation. */
     @Column(name = "total_costs", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalCosts;
 
@@ -58,4 +71,20 @@ public class ProfitCalculation {
     @CreationTimestamp
     @Column(name = "calculated_at", nullable = false, updatable = false)
     private LocalDateTime calculatedAt;
+
+    /**
+     * Adds an income to this calculation, keeping both sides of the relation in sync.
+     */
+    public void addIncome(Income income) {
+        income.setCalculation(this);
+        incomes.add(income);
+    }
+
+    /**
+     * Adds a cost to this calculation, keeping both sides of the relation in sync.
+     */
+    public void addCost(Cost cost) {
+        cost.setCalculation(this);
+        costs.add(cost);
+    }
 }

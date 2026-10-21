@@ -1,6 +1,10 @@
 # Dachser Exercise – Calculate Profit
 
-Calculates the profit or loss of each shipment: **Profit = Total Income − Total Costs**.
+Calculates the profit or loss of each shipment: **Profit = Income − (Cost + Additional Cost)**.
+
+Each calculation is independent, as in the UI prototype: it stores the income and costs entered
+with it and its result, and appears as one row of the shipment's history. Deleting a calculation
+also deletes its income and costs.
 
 - **Backend:** Java 17, Spring Boot 3.1.5, Maven 3.9.3, H2 (in-memory)
 - **Frontend:** Angular 17.1.0, Node 21.0.0, Angular Material 17.3.1, Bootstrap 5.3.3
@@ -10,7 +14,7 @@ Calculates the profit or loss of each shipment: **Profit = Total Income − Tota
 ```
 backend/      Spring Boot API (entities, repositories, DTOs, mappers, services, controller)
 frontend/     Angular application
-database/     schema.sql (tables, relations, indexes) and data.sql (sample data)
+database/     schema.sql (tables, relations, indexes), data.sql (sample data) and the model diagram
 collection/   Postman collection
 ```
 
@@ -49,16 +53,19 @@ Open **http://localhost:4200**.
 |---|---|---|
 | GET | `/api/shipments` | List shipments |
 | GET | `/api/shipments/code/{code}` | Find a shipment by code |
-| POST | `/api/shipments/{id}/profit-calculations` | Record income/costs, calculate and store the result |
+| POST | `/api/shipments/{id}/profit-calculations` | Store the income and costs as a new calculation and return its result |
 | GET | `/api/shipments/{id}/profit-calculations` | Calculation history (most recent first) |
+| DELETE | `/api/shipments/{id}/profit-calculations/{calculationId}` | Delete a calculation with its income and costs |
 
-Example request body:
+Example request body (`income` and `cost` are required, `additionalCost` is optional):
 
 ```json
 { "income": 230.5, "cost": 200, "additionalCost": 0 }
 ```
 
-Errors are returned as `ProblemDetail` (404 shipment not found, 400 invalid data).
+Result: income 230.50, total costs 200.00, profit 30.50.
+
+Errors are returned as `ProblemDetail` (404 shipment or calculation not found, 400 invalid data).
 The Postman collection is in `collection/`.
 
 ## Tests

@@ -4,7 +4,8 @@
   <div class="col-md-5">
     <mat-form-field class="w-100">
       <mat-label>Shipment</mat-label>
-      <mat-select [value]="selectedShipment" (selectionChange)="selectShipment($event.value)">
+      <!-- Disabled while loading, so a late response cannot land on another shipment -->
+      <mat-select [value]="selectedShipment" [disabled]="loading" (selectionChange)="selectShipment($event.value)">
         @for (shipment of shipments; track shipment.id) {
           <mat-option [value]="shipment">{{ shipment.shipmentCode }} - {{ shipment.description }}</mat-option>
         }
@@ -27,4 +28,4 @@
   }
 </div>
 
-<app-calculation-history [calculations]="history" />
+<app-calculation-history [calculations]="history" [disabled]="loading" (remove)="delete($event)" />

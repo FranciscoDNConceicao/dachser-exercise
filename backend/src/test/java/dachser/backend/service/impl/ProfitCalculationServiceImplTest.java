@@ -3,13 +3,11 @@ package dachser.backend.service.impl;
 import dachser.backend.dto.ProfitCalculationRequest;
 import dachser.backend.dto.ProfitCalculationResponse;
 import dachser.backend.entity.Cost;
-import dachser.backend.entity.Income;
 import dachser.backend.entity.ProfitCalculation;
 import dachser.backend.entity.Shipment;
+import dachser.backend.exception.ProfitCalculationNotFoundException;
 import dachser.backend.exception.ShipmentNotFoundException;
 import dachser.backend.mapper.ProfitCalculationMapper;
-import dachser.backend.repository.CostRepository;
-import dachser.backend.repository.IncomeRepository;
 import dachser.backend.repository.ProfitCalculationRepository;
 import dachser.backend.repository.ShipmentRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -43,10 +40,6 @@ class ProfitCalculationServiceImplTest {
     @Mock
     private ShipmentRepository shipmentRepository;
     @Mock
-    private IncomeRepository incomeRepository;
-    @Mock
-    private CostRepository costRepository;
-    @Mock
     private ProfitCalculationRepository profitCalculationRepository;
 
     private ProfitCalculationServiceImpl service;
@@ -54,8 +47,8 @@ class ProfitCalculationServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new ProfitCalculationServiceImpl(shipmentRepository, incomeRepository, costRepository,
-                profitCalculationRepository, new ProfitCalculationMapper());
+        service = new ProfitCalculationServiceImpl(shipmentRepository, profitCalculationRepository,
+                new ProfitCalculationMapper());
 
         shipment = new Shipment();
         shipment.setId(SHIPMENT_ID);
@@ -63,71 +56,78 @@ class ProfitCalculationServiceImplTest {
     }
 
     @Test
-    void calculate_recordsIncomeAndCostsAndReturnsProfit() {
-        givenShipmentWithTotals("1230.50", "1000.00");
+    void calculate_returnsIncomeMinusCosts() {
+        givenShipment();
 
-        ProfitCalculationResponse result = service.calculate(SHIPMENT_ID,
-                new ProfitCalculationRequest(new BigDecimal("230.50"), new BigDecimal("200"), new BigDecimal("50")));
-
-        ArgumentCaptor<Income> income = ArgumentCaptor.forClass(Income.class);
-        verify(incomeRepository).save(income.capture());
-        assertThat(income.getValue().getAmount()).isEqualByComparingTo("230.50");
-        assertThat(income.getValue().getShipment()).isSameAs(shipment);
-
-        ArgumentCaptor<Cost> costs = ArgumentCaptor.forClass(Cost.class);
-        verify(costRepository, times(2)).save(costs.capture());
-        assertThat(costs.getAllValues())
-                .extracting(Cost::getDescription)
-                .containsExactly(ProfitCalculationServiceImpl.COST_DESCRIPTION,
-                        ProfitCalculationServiceImpl.ADDITIONAL_COST_DESCRIPTION);
+        ProfitCalculationResponse result = service.calculate(SHIPMENT_ID, request("230.50", "200", "0"));
 
         assertThat(result.shipmentCode()).isEqualTo("SHP-0001");
-        assertThat(result.totalIncome()).isEqualByComparingTo("1230.50");
-        assertThat(result.totalCosts()).isEqualByComparingTo("1000.00");
-        assertThat(result.profitOrLoss()).isEqualByComparingTo("230.50");
+        assertThat(result.totalIncome()).isEqualByComparingTo("230.50");
+        assertThat(result.totalCosts()).isEqualByComparingTo("200");
+        assertThat(result.profitOrLoss()).isEqualByComparingTo("30.50");
+    }
+
+    @Test
+    void calculate_addsAdditionalCostToTotalCosts() {
+        givenShipment();
+
+        ProfitCalculationResponse result = service.calculate(SHIPMENT_ID, request("1000", "150", "50"));
+
+        assertThat(result.totalCosts()).isEqualByComparingTo("200");
+        assertThat(result.profitOrLoss()).isEqualByComparingTo("800");
     }
 
     @Test
     void calculate_returnsNegativeValueWhenCostsExceedIncome() {
-        givenShipmentWithTotals("500.00", "900.00");
+        givenShipment();
 
-        ProfitCalculationResponse result = service.calculate(SHIPMENT_ID,
-                new ProfitCalculationRequest(null, null, null));
+        ProfitCalculationResponse result = service.calculate(SHIPMENT_ID, request("500", "900", null));
 
-        assertThat(result.profitOrLoss()).isEqualByComparingTo("-400.00");
+        assertThat(result.profitOrLoss()).isEqualByComparingTo("-400");
     }
 
     @Test
-    void calculate_storesTheCalculationResult() {
-        givenShipmentWithTotals("1000.00", "200.00");
+    void calculate_storesTheIncomeAndCostsWithTheCalculation() {
+        givenShipment();
 
-        service.calculate(SHIPMENT_ID, new ProfitCalculationRequest(null, null, null));
+        service.calculate(SHIPMENT_ID, request("1000", "150", "50"));
 
-        ArgumentCaptor<ProfitCalculation> saved = ArgumentCaptor.forClass(ProfitCalculation.class);
-        verify(profitCalculationRepository).save(saved.capture());
-        assertThat(saved.getValue().getShipment()).isSameAs(shipment);
-        assertThat(saved.getValue().getTotalIncome()).isEqualByComparingTo("1000.00");
-        assertThat(saved.getValue().getTotalCosts()).isEqualByComparingTo("200.00");
-        assertThat(saved.getValue().getProfitOrLoss()).isEqualByComparingTo("800.00");
+        ProfitCalculation calculation = savedCalculation();
+        assertThat(calculation.getShipment()).isSameAs(shipment);
+        assertThat(calculation.getTotalIncome()).isEqualByComparingTo("1000");
+        assertThat(calculation.getTotalCosts()).isEqualByComparingTo("200");
+        assertThat(calculation.getProfitOrLoss()).isEqualByComparingTo("800");
+        assertThat(calculation.getIncomes()).singleElement().satisfies(income -> {
+            assertThat(income.getAmount()).isEqualByComparingTo("1000");
+            assertThat(income.getDescription()).isEqualTo(ProfitCalculationServiceImpl.INCOME_DESCRIPTION);
+            assertThat(income.getCalculation()).isSameAs(calculation);
+        });
+        assertThat(calculation.getCosts())
+                .extracting(Cost::getDescription)
+                .containsExactly(ProfitCalculationServiceImpl.COST_DESCRIPTION,
+                        ProfitCalculationServiceImpl.ADDITIONAL_COST_DESCRIPTION);
+        assertThat(calculation.getCosts())
+                .allSatisfy(cost -> assertThat(cost.getCalculation()).isSameAs(calculation));
     }
 
     @Test
-    void calculate_ignoresEmptyAndZeroAmounts() {
-        givenShipmentWithTotals("1500.00", "800.00");
+    void calculate_doesNotRecordEmptyOrZeroAdditionalCost() {
+        givenShipment();
 
-        service.calculate(SHIPMENT_ID, new ProfitCalculationRequest(BigDecimal.ZERO, null, BigDecimal.ZERO));
+        service.calculate(SHIPMENT_ID, request("100", "50", "0"));
 
-        verify(incomeRepository, never()).save(any());
-        verify(costRepository, never()).save(any());
+        assertThat(savedCalculation().getCosts())
+                .extracting(Cost::getDescription)
+                .containsExactly(ProfitCalculationServiceImpl.COST_DESCRIPTION);
     }
 
     @Test
     void calculate_throwsWhenShipmentDoesNotExist() {
         when(shipmentRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.calculate(99L, new ProfitCalculationRequest(BigDecimal.TEN, null, null)))
+        assertThatThrownBy(() -> service.calculate(99L, request("10", "5", null)))
                 .isInstanceOf(ShipmentNotFoundException.class);
-        verifyNoInteractions(incomeRepository, costRepository, profitCalculationRepository);
+        verifyNoInteractions(profitCalculationRepository);
     }
 
     @Test
@@ -157,14 +157,46 @@ class ProfitCalculationServiceImplTest {
         assertThatThrownBy(() -> service.findHistory(99L)).isInstanceOf(ShipmentNotFoundException.class);
     }
 
+    @Test
+    void delete_removesTheCalculation() {
+        ProfitCalculation calculation = new ProfitCalculation();
+        when(profitCalculationRepository.findByIdAndShipmentId(7L, SHIPMENT_ID)).thenReturn(Optional.of(calculation));
+
+        service.delete(SHIPMENT_ID, 7L);
+
+        verify(profitCalculationRepository).delete(calculation);
+    }
+
+    @Test
+    void delete_throwsWhenCalculationDoesNotBelongToTheShipment() {
+        when(profitCalculationRepository.findByIdAndShipmentId(7L, 2L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.delete(2L, 7L))
+                .isInstanceOf(ProfitCalculationNotFoundException.class)
+                .hasMessageContaining("7");
+        verify(profitCalculationRepository, never()).delete(any());
+    }
+
     /**
-     * Mocks an existing shipment whose recorded incomes and costs sum to the given totals.
+     * Mocks an existing shipment and the save of the calculation.
      */
-    private void givenShipmentWithTotals(String totalIncome, String totalCosts) {
+    private void givenShipment() {
         when(shipmentRepository.findById(SHIPMENT_ID)).thenReturn(Optional.of(shipment));
-        when(incomeRepository.sumAmountByShipmentId(SHIPMENT_ID)).thenReturn(new BigDecimal(totalIncome));
-        when(costRepository.sumAmountByShipmentId(SHIPMENT_ID)).thenReturn(new BigDecimal(totalCosts));
         when(profitCalculationRepository.save(any(ProfitCalculation.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
+    private ProfitCalculation savedCalculation() {
+        ArgumentCaptor<ProfitCalculation> saved = ArgumentCaptor.forClass(ProfitCalculation.class);
+        verify(profitCalculationRepository).save(saved.capture());
+        return saved.getValue();
+    }
+
+    private static ProfitCalculationRequest request(String income, String cost, String additionalCost) {
+        return new ProfitCalculationRequest(decimal(income), decimal(cost), decimal(additionalCost));
+    }
+
+    private static BigDecimal decimal(String value) {
+        return value == null ? null : new BigDecimal(value);
     }
 }

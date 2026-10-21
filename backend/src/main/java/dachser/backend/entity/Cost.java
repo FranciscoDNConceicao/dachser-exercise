@@ -16,9 +16,9 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * Operational cost related to the service provision of a shipment
- * (e.g. transport, fuel, storage).
- * The total costs of a shipment are the sum of all its costs.
+ * Service provision cost entered in a profit calculation (e.g. the cost and the additional cost).
+ * It belongs to its calculation and is deleted together with it.
+ * The total costs of a calculation are the sum of its costs.
  * Mapped to the {@code costs} table.
  */
 @Entity
@@ -33,12 +33,12 @@ public class Cost {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Shipment this cost belongs to. */
+    /** Calculation in which this cost was entered. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "shipment_id", nullable = false)
-    private Shipment shipment;
+    @JoinColumn(name = "calculation_id", nullable = false)
+    private ProfitCalculation calculation;
 
-    /** Description of the cost (e.g. {@code Transport}, {@code Fuel}). */
+    /** Description of the cost (e.g. {@code Cost}, {@code Additional cost}). */
     @Column(name = "description", nullable = false)
     private String description;
 
