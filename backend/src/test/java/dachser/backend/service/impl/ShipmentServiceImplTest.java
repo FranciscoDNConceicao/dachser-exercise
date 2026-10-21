@@ -1,7 +1,6 @@
 package dachser.backend.service.impl;
 
 import dachser.backend.dto.ShipmentResponse;
-import dachser.backend.entity.Customer;
 import dachser.backend.entity.Shipment;
 import dachser.backend.exception.ShipmentNotFoundException;
 import dachser.backend.mapper.ShipmentMapper;
@@ -35,14 +34,10 @@ class ShipmentServiceImplTest {
     void setUp() {
         service = new ShipmentServiceImpl(shipmentRepository, new ShipmentMapper());
 
-        Customer customer = new Customer();
-        customer.setName("Atlantic Trading Lda");
-
         shipment = new Shipment();
         shipment.setId(1L);
         shipment.setShipmentCode("SHP-0001");
         shipment.setDescription("Shipment Porto - Lisbon");
-        shipment.setCustomer(customer);
     }
 
     @Test
@@ -50,14 +45,14 @@ class ShipmentServiceImplTest {
         when(shipmentRepository.findAll()).thenReturn(List.of(shipment));
 
         assertThat(service.findAll())
-                .containsExactly(new ShipmentResponse(1L, "SHP-0001", "Shipment Porto - Lisbon", "Atlantic Trading Lda"));
+                .containsExactly(new ShipmentResponse(1L, "SHP-0001", "Shipment Porto - Lisbon"));
     }
 
     @Test
     void findByCode_returnsShipment() {
         when(shipmentRepository.findByShipmentCode("SHP-0001")).thenReturn(Optional.of(shipment));
 
-        assertThat(service.findByCode("SHP-0001").customerName()).isEqualTo("Atlantic Trading Lda");
+        assertThat(service.findByCode("SHP-0001").description()).isEqualTo("Shipment Porto - Lisbon");
     }
 
     @Test

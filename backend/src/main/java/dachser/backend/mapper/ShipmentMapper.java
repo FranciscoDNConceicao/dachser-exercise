@@ -12,14 +12,12 @@ public class ShipmentMapper {
 
     /**
      * Converts a shipment entity into its DTO.
-     * The customer must be loaded (or the call made inside a transaction).
      */
     public ShipmentResponse toResponse(Shipment shipment) {
         return new ShipmentResponse(
                 shipment.getId(),
                 shipment.getShipmentCode(),
-                shipment.getDescription(),
-                shipment.getCustomer().getName()
+                shipment.getDescription()
         );
     }
 }

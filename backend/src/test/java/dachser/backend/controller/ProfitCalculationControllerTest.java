@@ -45,12 +45,12 @@ class ProfitCalculationControllerTest {
     @Test
     void findAllShipments_returnsList() throws Exception {
         when(shipmentService.findAll()).thenReturn(List.of(
-                new ShipmentResponse(1L, "SHP-0001", "Shipment Porto - Lisbon", "Atlantic Trading Lda")));
+                new ShipmentResponse(1L, "SHP-0001", "Shipment Porto - Lisbon")));
 
         mockMvc.perform(get("/api/shipments"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].shipmentCode").value("SHP-0001"))
-                .andExpect(jsonPath("$[0].customerName").value("Atlantic Trading Lda"));
+                .andExpect(jsonPath("$[0].description").value("Shipment Porto - Lisbon"));
     }
 
     @Test

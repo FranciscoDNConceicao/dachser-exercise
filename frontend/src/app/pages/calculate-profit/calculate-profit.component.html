@@ -12,12 +12,6 @@
       </mat-select>
     </mat-form-field>
   </div>
-
-  @if (selectedShipment) {
-    <div class="col-md-7 text-muted">
-      Customer: <strong>{{ selectedShipment.customerName }}</strong>
-    </div>
-  }
 </div>
 
 <app-calculation-form [disabled]="!selectedShipment || loading" (calculate)="calculate($event)" />

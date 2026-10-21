@@ -5,5 +5,4 @@ export interface Shipment {
   id: number;
   shipmentCode: string;
   description: string;
-  customerName: string;
 }

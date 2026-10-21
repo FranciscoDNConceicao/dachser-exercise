@@ -31,10 +31,10 @@ class RepositoryIntegrationTest {
     private ProfitCalculationRepository profitCalculationRepository;
 
     @Test
-    void findByShipmentCode_loadsShipmentWithCustomer() {
+    void findByShipmentCode_returnsShipment() {
         Shipment shipment = shipmentRepository.findByShipmentCode("SHP-0001").orElseThrow();
 
-        assertThat(shipment.getCustomer().getName()).isEqualTo("Atlantic Trading Lda");
+        assertThat(shipment.getDescription()).isEqualTo("Shipment Porto - Lisbon");
     }
 
     @Test
